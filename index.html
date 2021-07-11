@@ -11,7 +11,7 @@
     <title>Animation of Covid Vaccination Progress in the US</title>
 
     <!-- Link to the CSS files-->
-    <link rel="stylesheet" href="https://js.arcgis.com/4.20/esri/themes/light/main.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.20/esri/themes/dark/main.css">
     <link rel="stylesheet" type="text/css" href="css/style.css">
 
     <!-- Link to the Js files-->
@@ -21,6 +21,24 @@
 
 <body>
     <div id="viewDiv"></div>
+    <div id="ui-controls" class="esri-widget">
+        <div id="titleDiv" class="esri-widget">
+            Covid-19 Vaccination
+        </div>
+        <div id="subtitleDiv" class="esri-widget">
+            Animate and explore the progress of COVID-19 vaccination in the United States by state.
+        </div>
+        <select id="renderer-select" class="esri-select">
+            <option value="daily-doses" selected>daily vaccine doses</option>
+            <option value="vaccination-rate">daily vaccine doses per 100</option>
+            <option value="doses-last-7-days">vaccine doses for the last 7 days </option>
+        </select>
+        <div id="legend"></div>
+    </div>
+    <div id="timeSliderDiv" style="width: 1100px;"></div>
+    <div class="esri-component esri-home esri-widget--button esri-widget esri-icon-expand" id="time-slider-toggle">
+    </div>
+
 </body>
 
 </html>
