@@ -11,13 +11,13 @@ define([
 ) {
     createRenderer = function (rendererType) {
         switch (rendererType) {
-            case "daily-doses": {
+            case "total-doses": {
                 const dotDensityRenderer = new DotDensityRenderer({
                     dotValue: 150,
                     outline: null,
                     referenceScale: 554660, // 1:577,790 view scale
                     legendOptions: {
-                        unit: "doses"
+                        unit: "Doses"
                     },
                     attributes: [
                         {
@@ -29,7 +29,7 @@ define([
                 })
 
                 return dotDensityRenderer;
-                break;
+                //break;
             }
             case "vaccination-rate": {
                 const defaultSym = {
@@ -40,49 +40,59 @@ define([
                         width: "0.5px"
                     }
                 };
+
                 const renderer = {
                     type: "simple", // autocasts as new SimpleRenderer()
                     symbol: defaultSym,
-                    label: "U.S. County",
-                    visualVariables: [
-                        {
-                            type: "color",
-                            field: "date_07_03_2021",
-                            normalizationField: "Population",
-                            legendOptions: {
-                                title: "% population in poverty by county"
-                            },
-                            stops: [
-                                {
-                                    value: 0.1,
-                                    color: "#FFFCD4",
-                                    label: "<10%"
-                                },
-                                {
-                                    value: 0.3,
-                                    color: "#350242",
-                                    label: ">30%"
-                                }
-                            ]
-                        }
-                    ]
+                    label: "U.S. State",
+                    visualVariables: {
+                        type: "color",
+                        valueExpression: "( $feature.date_07_03_2021 / $feature.Population ) * 100",
+                        valueExpressionTitle: "Total vaccinations per hundred",
+                        stops: [
+                            { value: 0.1, color: "#EAFAF1" },
+                            { value: 5, color: "#D5F5E3" },
+                            { value: 30, color: "#ABEBC6" },
+                            { value: 60, color: "#58D68D" },
+                            { value: 80, color: "#28B463" },
+                            { value: 100, color: "#1D8348" },
+                            { value: 120, color: "#145A32" }
+                        ]
+                    }
+
                 };
+
+                return renderer;
+                //break;
             }
         }
 
     };
 
-    exports.createRenderer = createRenderer;
+    function updateRenderer(layer, dateValue, rendererType) {
+        switch (rendererType) {
+            case "total-doses": {
+                const renderer = createRenderer(rendererType);
+                const date = dateValue;
+                const fieldName = "date_" + ("0" + (date.getMonth() + 1)).slice(-2) + "_" + ("0" + date.getDate()).slice(-2) + "_" + date.getFullYear();
+                //console.log(fieldName);
+                renderer.attributes[0].field = fieldName;
+                layer.renderer = renderer;
+                break;
+            }
+            case "vaccination-rate": {
+                const renderer = createRenderer(rendererType);
+                const date = dateValue;
+                const fieldName = "date_" + ("0" + (date.getMonth() + 1)).slice(-2) + "_" + ("0" + date.getDate()).slice(-2) + "_" + date.getFullYear();
+                renderer.visualVariables.valueExpression = '( $feature.' + fieldName + '/ $feature.Population ) * 100';
+                layer.renderer = renderer;
+                break;
+            }
+        }
 
-    function updateRenderer(layer, dateValue) {
-        renderer = layer.renderer.clone();
-        const date = dateValue;
-        const fieldName = "date_" + ("0" + (date.getMonth() + 1)).slice(-2) + "_" + ("0" + date.getDate()).slice(-2) + "_" + date.getFullYear();
-        //console.log(fieldName);
-        renderer.attributes[0].field = fieldName;
-        layer.renderer = renderer;
     }
 
+    exports.createRenderer = createRenderer;
     exports.updateRenderer = updateRenderer;
 });
 
