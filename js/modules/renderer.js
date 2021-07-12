@@ -9,7 +9,7 @@ define([
     exports,
     DotDensityRenderer
 ) {
-    createRenderer = function (rendererType) {
+    createRenderer = function (rendererType, dateField) {
         switch (rendererType) {
             case "total-doses": {
                 const dotDensityRenderer = new DotDensityRenderer({
@@ -22,7 +22,7 @@ define([
                     attributes: [
                         {
                             // One red dot will be drawn for every 100 White people
-                            field: "date_07_03_2021",
+                            field: dateField,
                             color: "#32ef94",
                             label: "Covid-19 Vacine Doses"
                         },]
@@ -47,7 +47,7 @@ define([
                     label: "U.S. State",
                     visualVariables: {
                         type: "color",
-                        valueExpression: "( $feature.date_07_03_2021 / $feature.Population ) * 100",
+                        valueExpression: '( $feature.' + dateField + '/ $feature.Population ) * 100',
                         valueExpressionTitle: "Total vaccinations per hundred",
                         stops: [
                             { value: 0.1, color: "#EAFAF1" },
@@ -69,27 +69,9 @@ define([
 
     };
 
-    function updateRenderer(layer, dateValue, rendererType) {
-        switch (rendererType) {
-            case "total-doses": {
-                const renderer = createRenderer(rendererType);
-                const date = dateValue;
-                const fieldName = "date_" + ("0" + (date.getMonth() + 1)).slice(-2) + "_" + ("0" + date.getDate()).slice(-2) + "_" + date.getFullYear();
-                //console.log(fieldName);
-                renderer.attributes[0].field = fieldName;
-                layer.renderer = renderer;
-                break;
-            }
-            case "vaccination-rate": {
-                const renderer = createRenderer(rendererType);
-                const date = dateValue;
-                const fieldName = "date_" + ("0" + (date.getMonth() + 1)).slice(-2) + "_" + ("0" + date.getDate()).slice(-2) + "_" + date.getFullYear();
-                renderer.visualVariables.valueExpression = '( $feature.' + fieldName + '/ $feature.Population ) * 100';
-                layer.renderer = renderer;
-                break;
-            }
-        }
-
+    updateRenderer = function (layer, rendererType, dateField) {
+        const renderer = createRenderer(rendererType, dateField);
+        layer.renderer = renderer;
     }
 
     exports.createRenderer = createRenderer;
