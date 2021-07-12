@@ -9,13 +9,12 @@ require([
   "esri/widgets/Zoom",
   "esri/widgets/ScaleBar",
   "esri/widgets/Expand",
-  "esri/widgets/Search",
-  "esri/widgets/Search/LayerSearchSource",
   "esri/widgets/TimeSlider",
   "esri/core/watchUtils",
   //import custom modules
   "./js/modules/renderer.js",
   "./js/modules/search.js",
+  "./js/modules/popupUtils.js",
 ], function (
   // esri modules
   esriConfig,
@@ -27,13 +26,12 @@ require([
   Zoom,
   ScaleBar,
   Expand,
-  Search,
-  LayerSearchSource,
   TimeSlider,
   watchUtils,
   //custom modules
   renderer,
   search,
+  popupUtils,
 ) {
 
   // configure the ArcGIS API key
@@ -55,13 +53,38 @@ require([
   //get rendererType
   const rendererSelect = document.getElementById("renderer-select");
 
+  // let template = {
+  //   title: "{NAME}, {STUSPS}",
+  //   content: [
+  //     {
+  //       type: "fields",
+  //       fieldInfos: [
+  //         {
+  //           fieldName: "date_07_03_2021", // The field whose values you want to format
+  //           label: "Total Vaccine Doses"
+  //         },
+  //         {
+  //           fieldName: "expression/vaccination_rate", // The field whose values you want to format
+  //           label: "Total Vaccinations per Hundred"
+  //         },
+  //       ]
+  //     }],
+  //   expressionInfos: [
+  //     {
+  //       name: "vaccination_rate",
+  //       title: "Total Vaccinations per Hundred",
+  //       expression: "($feature.date_07_03_2021/$feature.Population)*100"
+  //     }]
+  // };
+
   //create a new layer
   const vaccineLayer = new FeatureLayer({
-    title: "Covid-19 Daily Vaccination in the US",
+    title: "Covid-19 Total Vaccinations in the US",
     url: "https://services.arcgis.com/Sf0q24s0oDKgX14j/arcgis/rest/services/covid19_vaccine_time_series_us_state/FeatureServer/0",
     copyright: "App and maps by <a href=\"https://github.com/YuanWANG2662\">Yuan Wang</a>",
     outFields: ["*"],
-    renderer: renderer.createRenderer(rendererSelect.value) // imported from the 'renderer' module
+    renderer: renderer.createRenderer(rendererSelect.value), // imported from the 'renderer' module
+    popupTemplate: popupUtils.createPopupTemplate(/*'vaccination-rate'*/rendererSelect.value, 'date_07_03_2021')
   });
 
   // add the layer to the map
@@ -164,7 +187,8 @@ require([
     // representing selected date on the slider
     const activeDate = timeSlider.values[0];
     // update renderer to reference field
-    renderer.updateRenderer(vaccineLayer, activeDate);
+    renderer.updateRenderer(vaccineLayer, activeDate, rendererSelect.value);
+    //popupUtils.updatePopupTemplate(vaccineLayer, rendererSelect.value, activeDate);
   });
 
   //update the map view when the user changes the value of the time slider
@@ -173,13 +197,26 @@ require([
     .then(function (layerView) {
       watchUtils.whenFalseOnce(layerView, "updating", function () {
         const activeDate = timeSlider.values[0];
-        renderer.updateRenderer(vaccineLayer, activeDate);
+        renderer.updateRenderer(vaccineLayer, activeDate, rendererSelect.value);
+        //popupUtils.updatePopupTemplate(vaccineLayer, rendererSelect.value, activeDate);
       });
     });
 
   rendererSelect.addEventListener("change", () => {
-    updateLayer(false);
+    updateLayer();
   });
+
+  function updateLayer() {
+    // representing selected date on the slider
+    const activeDate = timeSlider.values[0];
+    // update renderer to reference field
+    renderer.updateRenderer(vaccineLayer, activeDate, rendererSelect.value);
+    // update popup template to reference field
+    //popupUtils.updatePopupTemplate(vaccineLayer, rendererSelect.value, activeDate)
+
+  }
+
+
 
 
 
