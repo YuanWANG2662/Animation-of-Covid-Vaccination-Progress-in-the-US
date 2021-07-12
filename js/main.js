@@ -47,35 +47,19 @@ require([
     map: map,
     center: [-110, 35], // longitude, latitude for the United States (95.7129 W, 37.0902 N)
     zoom: 3, // zoom level
-    container: "viewDiv" // viewDiv element
+    container: "viewDiv", // viewDiv element
+    popup: {
+      dockEnabled: true,
+      dockOptions: {
+        // Ignore the default sizes that trigger responsive docking
+        breakpoint: false,
+        position: "bottom-right"
+      }
+    },
   });
 
   //get rendererType
   const rendererSelect = document.getElementById("renderer-select");
-
-  // let template = {
-  //   title: "{NAME}, {STUSPS}",
-  //   content: [
-  //     {
-  //       type: "fields",
-  //       fieldInfos: [
-  //         {
-  //           fieldName: "date_07_03_2021", // The field whose values you want to format
-  //           label: "Total Vaccine Doses"
-  //         },
-  //         {
-  //           fieldName: "expression/vaccination_rate", // The field whose values you want to format
-  //           label: "Total Vaccinations per Hundred"
-  //         },
-  //       ]
-  //     }],
-  //   expressionInfos: [
-  //     {
-  //       name: "vaccination_rate",
-  //       title: "Total Vaccinations per Hundred",
-  //       expression: "($feature.date_07_03_2021/$feature.Population)*100"
-  //     }]
-  // };
 
   //create a new layer
   const vaccineLayer = new FeatureLayer({
@@ -83,8 +67,8 @@ require([
     url: "https://services.arcgis.com/Sf0q24s0oDKgX14j/arcgis/rest/services/covid19_vaccine_time_series_us_state/FeatureServer/0",
     copyright: "App and maps by <a href=\"https://github.com/YuanWANG2662\">Yuan Wang</a>",
     outFields: ["*"],
-    renderer: renderer.createRenderer(rendererSelect.value), // imported from the 'renderer' module
-    popupTemplate: popupUtils.createPopupTemplate(/*'vaccination-rate'*/rendererSelect.value, 'date_07_03_2021')
+    renderer: renderer.createRenderer(rendererSelect.value, 'date_07_03_2021'), // initialize renderer with the imported module 'renderer'
+    popupTemplate: popupUtils.createPopupTemplate(rendererSelect.value, 'date_07_03_2021') // initialize popupTemplate with the imported module 'popupUtils'
   });
 
   // add the layer to the map
@@ -158,6 +142,7 @@ require([
     start: new Date(2020, 11, 14),  // 2020.12.14 new Date(year, monthIndex, day)
     end: new Date(2021, 6, 3)       //  2021.7.3  new Date(year, monthIndex, day)
   }
+
   // configure timeSlider 
   const timeSlider = new TimeSlider({
     container: "timeSliderDiv",
@@ -168,8 +153,8 @@ require([
       mode: "instant", //instant time value instead of time window
       fullTimeExtent: initialTimeExtent,
       timeExtent: {
-        start: initialTimeExtent.end,
-        end: initialTimeExtent.end
+        start: initialTimeExtent.end, //start equals end, since the instant mode is used
+        end: initialTimeExtent.end //start equals end, since the instant mode is used
       },
     },
     stops: {
@@ -180,15 +165,24 @@ require([
     }
   });
 
-  // When the user changes the value of the time slider, change the renderer to reflect
-  // data corresponding to the date indicated on the slider
-
-  timeSlider.watch("values", () => {
+  // function to update the layer
+  // to be revoked when the user change the value of the timeslider or the select box
+  function updateLayer() {
     // representing selected date on the slider
     const activeDate = timeSlider.values[0];
+    //construct the date field according to the way it's stored in the feature layer
+    const dateField = "date_" + ("0" + (activeDate.getMonth() + 1)).slice(-2) + "_" + ("0" + activeDate.getDate()).slice(-2) + "_" + activeDate.getFullYear();
     // update renderer to reference field
-    renderer.updateRenderer(vaccineLayer, activeDate, rendererSelect.value);
-    //popupUtils.updatePopupTemplate(vaccineLayer, rendererSelect.value, activeDate);
+    renderer.updateRenderer(vaccineLayer, rendererSelect.value, dateField);
+    // update popup template to reference field
+    popupUtils.updatePopupTemplate(vaccineLayer, rendererSelect.value, dateField);
+
+  }
+
+  // When the user changes the value of the time slider, update the layer to reflect
+  // data corresponding to the date indicated on the slider
+  timeSlider.watch("values", () => {
+    updateLayer();
   });
 
   //update the map view when the user changes the value of the time slider
@@ -196,30 +190,14 @@ require([
     .whenLayerView(vaccineLayer)
     .then(function (layerView) {
       watchUtils.whenFalseOnce(layerView, "updating", function () {
-        const activeDate = timeSlider.values[0];
-        renderer.updateRenderer(vaccineLayer, activeDate, rendererSelect.value);
-        //popupUtils.updatePopupTemplate(vaccineLayer, rendererSelect.value, activeDate);
+        updateLayer();
       });
     });
 
+
+  //when the user change the value of the select box, update the layer to reflect
   rendererSelect.addEventListener("change", () => {
     updateLayer();
   });
-
-  function updateLayer() {
-    // representing selected date on the slider
-    const activeDate = timeSlider.values[0];
-    // update renderer to reference field
-    renderer.updateRenderer(vaccineLayer, activeDate, rendererSelect.value);
-    // update popup template to reference field
-    //popupUtils.updatePopupTemplate(vaccineLayer, rendererSelect.value, activeDate)
-
-  }
-
-
-
-
-
-
 
 });
