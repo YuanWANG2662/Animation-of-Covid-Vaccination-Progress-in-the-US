@@ -12,5 +12,5 @@ The proposed web application will implement the following functionalities:
 * A separate section to display histogram for the change of variables over time
 * Visualization of extra layers like vaccination centers or testing centers
 * Downloadable data service: shapefile or map (and if possible, GIF of the animation)
-* chart:
+* Chart:
 ![image](https://github.com/YuanWANG2662/Animation-of-Covid-Vaccination-Progress-in-the-US/blob/main/chart.png)
