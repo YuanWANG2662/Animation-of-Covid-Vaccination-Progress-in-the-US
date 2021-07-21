@@ -14,3 +14,6 @@ The proposed web application will implement the following functionalities:
 * Downloadable data service: shapefile or map (and if possible, GIF of the animation)
 * Chart:
 ![image](https://github.com/YuanWANG2662/Animation-of-Covid-Vaccination-Progress-in-the-US/blob/main/chart.png)
+
+Published on Netify:
+https://kind-northcutt-dba963.netlify.app/
